@@ -1,10 +1,10 @@
 services:
   - type: web
     name: controller-api
-    env: docker
+    runtime: docker
     plan: free
-    region: oregon
-    dockerfilePath: ./controller-api/Dockerfile
+    rootDir: controller-api
+    dockerfilePath: controller-api/Dockerfile
     autoDeploy: true
     envVars:
       - key: PORT
