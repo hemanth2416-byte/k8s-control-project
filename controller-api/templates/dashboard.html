@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Control Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: #d4af37;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            color: #ffd700;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        form {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.15);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid #d4af37;
+        }
+
+        form:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        form h3 {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #d4af37;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        form h3 i {
+            font-size: 1.4em;
+        }
+
+        label {
+            font-weight: 600;
+            color: #d4af37;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+            background: #2a2a2a;
+            color: #d4af37;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #ffd700;
+            background: #333333;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.6);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .scale-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: #000;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: #000;
+        }
+
+        .status-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: #000;
+        }
+
+        .resources-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .input-group .form-group {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: #1a1a1a;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 600px;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.3);
+            animation: slideIn 0.3s;
+            color: #d4af37;
+            border: 2px solid #d4af37;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            color: #d4af37;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #ffd700;
+        }
+
+        .pod-status-card {
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #2a2a2a;
+            color: #d4af37;
+        }
+
+        /* Logs Viewer Styles */
+        .logs-display {
+            background: #0a0a0a;
+            color: #d4af37;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.5;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .logs-display::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .logs-display::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        .logs-display::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+
+        .logs-display::-webkit-scrollbar-thumb:hover {
+            background: #ffd700;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease-out;
+            border: 2px solid #d4af37;
+            color: #d4af37;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid #ffd700;
+        }
+
+        .toast.success::before {
+            content: "✓";
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .toast.error {
+            border-left: 4px solid #d4af37;
+        }
+
+        .toast.error::before {
+            content: "✕";
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .toast.info {
+            border-left: 4px solid #d4af37;
+        }
+
+        .toast.info::before {
+            content: "ℹ";
+            color: #d4af37;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .toast-message {
+            flex: 1;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .toast-close {
+            cursor: pointer;
+            color: #999;
+            font-size: 1.2em;
+            transition: color 0.2s;
+        }
+
+        .toast-close:hover {
+            color: #333;
+        }
+
+        /* Dark Mode */
+        body.dark-mode {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+
+        .dark-mode header {
+            color: #d4af37;
+        }
+
+        .dark-mode header p {
+            color: #ffd700;
+        }
+
+        .dark-mode form {
+            background: #1a1a1a;
+            color: #d4af37;
+            border: 2px solid #d4af37;
+        }
+
+        .dark-mode label {
+            color: #d4af37;
+        }
+
+        .dark-mode select, .dark-mode input {
+            background: #2a2a2a;
+            color: #d4af37;
+            border-color: #d4af37;
+        }
+
+        .dark-mode select:focus, .dark-mode input:focus {
+            background: #333333;
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .dark-mode h3 {
+            color: #d4af37;
+        }
+
+        .dark-mode .modal-content {
+            background: #1a1a1a;
+            color: #d4af37;
+            border: 2px solid #d4af37;
+        }
+
+        .dark-mode .modal-close {
+            color: #d4af37;
+        }
+
+        .dark-mode .modal-close:hover {
+            color: #ffd700;
+        }
+
+        .dark-mode .pod-status-card {
+            background: #2a2a2a;
+            border-color: #d4af37;
+        }
+
+        .dark-mode .toast {
+            background: #1a1a1a;
+            color: #d4af37;
+            border: 1px solid #d4af37;
+        }
+
+        .toggle-dark-mode {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            color: #000;
+        }
+
+        .toggle-dark-mode:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+        }
+
+        body.dark-mode .toggle-dark-mode {
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: #000;
+        }
+
+        /* Search & Filter */
+        .search-container {
+            margin-bottom: 30px;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 2px solid #d4af37;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            font-size: 1em;
+            color: #d4af37;
+            background: #2a2a2a;
+            transition: all 0.3s;
+        }
+
+        .search-input::placeholder {
+            color: rgba(212, 175, 55, 0.6);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #ffd700;
+            background: #333333;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .dark-mode .search-input {
+            background: #2a2a2a;
+            border-color: #d4af37;
+            color: #d4af37;
+        }
+
+        .filter-results {
+            font-size: 0.9em;
+            color: #d4af37;
+            margin-top: 10px;
+        }
+
+        .dark-mode .filter-results {
+            color: #d4af37;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #d4af37;
+            font-size: 1.1em;
+        }
+
+        .dark-mode .no-results {
+            color: #d4af37;
+        }
+    </style>
+
+    <script>
+        async function loadDeployments() {
+            try {
+                const response = await fetch("/deployment-list");
+                const data = await response.json();
+                const dropdowns = document.querySelectorAll(".deploy-select");
+
+                dropdowns.forEach(dd => {
+                    dd.innerHTML = "";
+                    data.deployments.forEach(dep => {
+                        const option = document.createElement("option");
+                        option.value = dep;
+                        option.textContent = dep;
+                        dd.appendChild(option);
+                    });
+                });
+
+                updateFavoriteButtons();
+            } catch (error) {
+                alert("Could not load deployments: " + error);
+            }
+        }
+
+        async function viewPodStatus(deployment) {
+            if (!deployment) {
+                alert("Please select a deployment first");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/pod-status/${deployment}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    return;
+                }
+                
+                let html = `<h3 style="color: #d4af37; margin-bottom: 15px;">Pods: <strong>${data.deployment}</strong></h3>`;
+                
+                if (data.pods.length === 0) {
+                    html += `<p style="color: #d4af37;">No pods found</p>`;
+                } else {
+                    data.pods.forEach(pod => {
+                        const statusColor = pod.status === "Running" ? "#ffd700" : pod.status === "Pending" ? "#d4af37" : "#d4af37";
+                        html += `<div style="border: 2px solid #d4af37; background: #2a2a2a; padding: 10px; margin-bottom: 8px; border-radius: 6px;">
+                            <div style="color: #d4af37; font-weight: bold; font-family: monospace;">${pod.name}</div>
+                            <div style="color: #d4af37; font-size: 0.9em; margin-top: 4px;">Status: <span style="background: ${statusColor}; color: #000; padding: 2px 6px; border-radius: 3px;">${pod.status}</span> | Ready: ${pod.ready ? '✓' : '✗'} | Restarts: ${pod.restarts}</div>
+                        </div>`;
+                    });
+                }
+                
+                document.getElementById("podStatusContent").innerHTML = html;
+                document.getElementById("podStatusModal").style.display = "flex";
+            } catch (error) {
+                alert("Error: " + error);
+            }
+        }
+
+        function closePodModal() {
+            document.getElementById("podStatusModal").style.display = "none";
+        }
+
+        async function showLogsModal(deployment) {
+            if (!deployment) {
+                alert("Please select a deployment first");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/pod-status/${deployment}`);
+                const data = await response.json();
+                
+                if (data.error || data.pods.length === 0) {
+                    alert("No pods found");
+                    return;
+                }
+                
+                let html = `<h3 style="color: #d4af37; margin-bottom: 15px;">Select Pod: <strong>${data.deployment}</strong></h3>`;
+                data.pods.forEach(pod => {
+                    html += `<div style="border: 2px solid #d4af37; background: #2a2a2a; padding: 10px; margin-bottom: 8px; border-radius: 6px; cursor: pointer;" 
+                             onmouseover="this.style.background='#333333'" 
+                             onmouseout="this.style.background='#2a2a2a'"
+                             onclick="viewLogs('${pod.name}')">
+                        <div style="color: #d4af37; font-family: monospace; font-weight: bold;">${pod.name}</div>
+                        <div style="color: #d4af37; font-size: 0.85em; float: right;">View Logs →</div>
+                    </div>`;
+                });
+                
+                document.getElementById("logsSelectContent").innerHTML = html;
+                document.getElementById("logsSelectModal").style.display = "flex";
+            } catch (error) {
+                alert("Error: " + error);
+            }
+        }
+
+        async function viewLogs(podName) {
+            try {
+                const response = await fetch(`/pod-logs/${podName}?lines=200`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    return;
+                }
+                
+                document.getElementById("logsSelectModal").style.display = "none";
+                
+                const html = `
+                    <h3 style="margin-bottom: 15px;">Logs for Pod: <strong style="font-family: monospace;">${data.pod}</strong></h3>
+                    <div style="background: #0a0a0a; color: #d4af37; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.5; max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;">
+                        ${data.logs ? data.logs.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'No logs available'}
+                    </div>
+                    <button onclick="closeLogsModal()" style="margin-top: 15px; padding: 10px 20px; background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%); color: #000; border: none; border-radius: 6px; cursor: pointer; width: 100%;">Close</button>
+                `;
+                
+                const modal = document.getElementById("logsModal");
+                document.getElementById("logsContent").innerHTML = html;
+                modal.style.display = "flex";
+            } catch (error) {
+                alert("Could not fetch logs: " + error);
+            }
+        }
+
+        function closeLogsModal() {
+            document.getElementById("logsModal").style.display = "none";
+        }
+
+        function closeLogsSelectModal() {
+            document.getElementById("logsSelectModal").style.display = "none";
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.querySelector(".toast-container") || createToastContainer();
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-message">${message}</span>
+                <span class="toast-close" onclick="this.parentElement.remove()">×</span>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 4000);
+        }
+
+        function createToastContainer() {
+            const container = document.createElement("div");
+            container.className = "toast-container";
+            document.body.appendChild(container);
+            return container;
+        }
+
+        function handleFormSubmit(event, message) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: form.method,
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showToast(message || "Action completed successfully", "success");
+            })
+            .catch(error => {
+                showToast("Error: " + error.message, "error");
+            });
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+            const isDarkMode = document.body.classList.contains("dark-mode");
+            localStorage.setItem("darkMode", isDarkMode);
+            updateDarkModeButton();
+        }
+
+        function updateDarkModeButton() {
+            const button = document.querySelector(".toggle-dark-mode");
+            const isDarkMode = document.body.classList.contains("dark-mode");
+            button.innerHTML = isDarkMode ? '☀️' : '🌙';
+            button.title = isDarkMode ? 'Light Mode' : 'Dark Mode';
+        }
+
+        function initDarkMode() {
+            const isDarkMode = localStorage.getItem("darkMode") === "true";
+            if (isDarkMode) {
+                document.body.classList.add("dark-mode");
+            }
+            updateDarkModeButton();
+        }
+
+        function filterDeployments(searchTerm) {
+            const containers = document.querySelectorAll("[data-deployment-group]");
+            let visibleCount = 0;
+            
+            containers.forEach(container => {
+                const deploymentName = container.getAttribute("data-deployment-group");
+                const isVisible = deploymentName.toLowerCase().includes(searchTerm.toLowerCase());
+                container.style.display = isVisible ? "block" : "none";
+                if (isVisible) visibleCount++;
+            });
+            
+            const grid = document.querySelector(".grid");
+            if (visibleCount === 0) {
+                grid.innerHTML = '<div class="no-results" style="grid-column: 1/-1;"><i class="fas fa-search"></i><br>No deployments match "<strong>' + searchTerm + '</strong>"</div>';
+            }
+            
+            const resultsDiv = document.getElementById("filterResults");
+            if (resultsDiv) {
+                resultsDiv.textContent = `Found ${visibleCount} deployment(s)`;
+            }
+        }
+
+        async function showRollbackModal(deployment) {
+            if (!deployment) {
+                alert("Please select a deployment first");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/deployment-revisions/${deployment}`);
+                const data = await response.json();
+                
+                if (data.error || !data.revisions || data.revisions.length === 0) {
+                    showToast("No revision history found", "info");
+                    return;
+                }
+                
+                let html = `<h3 style="color: #d4af37; margin-bottom: 15px;">Rollback: <strong>${data.deployment}</strong></h3>`;
+                html += `<p style="color: #d4af37; font-size: 0.9em; margin-bottom: 15px;">Select version to rollback:</p>`;
+                
+                data.revisions.forEach(rev => {
+                    html += `<div style="border: 2px solid #d4af37; background: #2a2a2a; padding: 12px; margin-bottom: 10px; border-radius: 6px; cursor: pointer;" 
+                             onmouseover="this.style.background='#333333'; this.style.borderColor='#ffd700'" 
+                             onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#d4af37'"
+                             onclick="performRollback('${data.deployment}', '${rev.revision}')">
+                        <div style="color: #d4af37; font-weight: bold;">Revision ${rev.revision}</div>
+                        <div style="color: #d4af37; font-size: 0.85em; margin-top: 4px;">${rev.change_cause || 'No change cause'}</div>
+                        <button style="background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%); color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 8px; width: 100%; font-weight: 600;">Rollback</button>
+                    </div>`;
+                });
+                
+                const modal = document.getElementById("rollbackModal");
+                document.getElementById("rollbackContent").innerHTML = html;
+                modal.style.display = "flex";
+            } catch (error) {
+                showToast("Error: " + error.message, "error");
+            }
+        }
+
+        async function performRollback(deployment, revision) {
+            if (confirm(`Are you sure you want to rollback ${deployment} to revision ${revision}?`)) {
+                try {
+                    const formData = new FormData();
+                    formData.append("deployment", deployment);
+                    formData.append("revision", revision);
+                    
+                    const response = await fetch("/rollback-deployment", {
+                        method: "POST",
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    if (data.status === "success") {
+                        showToast(`Rollback to revision ${revision} initiated!`, "success");
+                        document.getElementById("rollbackModal").style.display = "none";
+                    } else {
+                        showToast("Rollback failed: " + data.error, "error");
+                    }
+                } catch (error) {
+                    showToast("Error: " + error.message, "error");
+                }
+            }
+        }
+
+        function closeRollbackModal() {
+            document.getElementById("rollbackModal").style.display = "none";
+        }
+
+        async function showEventsModal(deployment) {
+            if (!deployment) {
+                alert("Please select a deployment first");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/deployment-events/${deployment}`);
+                const data = await response.json();
+                
+                if (data.error || !data.events || data.events.length === 0) {
+                    showToast("No events found", "info");
+                    return;
+                }
+                
+                let html = `<h3 style="color: #d4af37; margin-bottom: 15px;">Events: <strong>${data.deployment}</strong></h3>`;
+                
+                data.events.forEach(event => {
+                    const typeColor = event.type === "Normal" ? "#ffd700" : "#d4af37";
+                    const timeStr = new Date(event.last_timestamp).toLocaleString();
+                    
+                    html += `<div style="border-left: 4px solid ${typeColor}; padding: 12px; margin-bottom: 10px; background: #2a2a2a; border-radius: 4px;">
+                        <div style="color: ${typeColor}; font-weight: bold; margin-bottom: 4px;">
+                            ${event.type} - <span style="background: ${typeColor}; color: #000; padding: 2px 6px; border-radius: 3px; font-size: 0.85em;">${event.reason}</span>
+                        </div>
+                        <div style="color: #d4af37; font-size: 0.9em;">${event.message}</div>
+                        <div style="color: #d4af37; font-size: 0.8em; margin-top: 4px;">${timeStr}</div>
+                    </div>`;
+                });
+                
+                const modal = document.getElementById("eventsModal");
+                document.getElementById("eventsContent").innerHTML = html;
+                modal.style.display = "flex";
+            } catch (error) {
+                showToast("Error: " + error.message, "error");
+            }
+        }
+
+        function closeEventsModal() {
+            document.getElementById("eventsModal").style.display = "none";
+        }
+
+        async function showHPAModal(deployment) {
+            if (!deployment) {
+                alert("Please select a deployment first");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/hpa-config/${deployment}`);
+                const data = await response.json();
+                
+                let html = `<h3 style="color: #d4af37; margin-bottom: 15px;">Auto-scaling: <strong>${data.deployment}</strong></h3>`;
+                html += `<div style="background: #2a2a2a; border-left: 4px solid ${data.exists ? '#ffd700' : '#d4af37'}; padding: 12px; margin-bottom: 15px; border-radius: 4px; color: #d4af37;">
+                    ${data.exists ? '✓ HPA Active: Min ' + data.min_replicas + ' - Max ' + data.max_replicas + ' @ ' + data.cpu_threshold + '% CPU' : '⚠ No HPA Configured'}
+                </div>`;
+                
+                html += `<form onsubmit="handleHPASubmit(event, '${deployment}')">
+                    <div style="margin-bottom: 12px;">
+                        <label style="color: #d4af37; display: block; margin-bottom: 4px;">Min Replicas:</label>
+                        <input type="number" name="min_replicas" value="${data.min_replicas}" min="1" max="100" required style="width: 100%; padding: 8px; background: #2a2a2a; border: 2px solid #d4af37; color: #d4af37; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label style="color: #d4af37; display: block; margin-bottom: 4px;">Max Replicas:</label>
+                        <input type="number" name="max_replicas" value="${data.max_replicas}" min="1" max="100" required style="width: 100%; padding: 8px; background: #2a2a2a; border: 2px solid #d4af37; color: #d4af37; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label style="color: #d4af37; display: block; margin-bottom: 4px;">CPU Threshold (%):</label>
+                        <input type="number" name="cpu_threshold" value="${data.cpu_threshold}" min="10" max="100" required style="width: 100%; padding: 8px; background: #2a2a2a; border: 2px solid #d4af37; color: #d4af37; border-radius: 4px;">
+                    </div>
+                    <button type="submit" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%); color: #000; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">Update HPA</button>
+                </form>`;
+                
+                const modal = document.getElementById("hpaModal");
+                document.getElementById("hpaContent").innerHTML = html;
+                modal.style.display = "flex";
+            } catch (error) {
+                showToast("Error: " + error.message, "error");
+            }
+        }
+
+        function closeHPAModal() {
+            document.getElementById("hpaModal").style.display = "none";
+        }
+
+        async function handleHPASubmit(event, deployment) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData();
+            formData.append("deployment", deployment);
+            formData.append("min_replicas", form.elements["min_replicas"].value);
+            formData.append("max_replicas", form.elements["max_replicas"].value);
+            formData.append("cpu_threshold", form.elements["cpu_threshold"].value);
+            
+            try {
+                const response = await fetch("/create-hpa", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.status === "success") {
+                    showToast("HPA configuration created/updated successfully!", "success");
+                    closeHPAModal();
+                } else {
+                    showToast("Error: " + data.error, "error");
+                }
+            } catch (error) {
+                showToast("Error: " + error.message, "error");
+            }
+        }
+
+        async function showStatsModal() {
+            try {
+                const response = await fetch("/cluster-stats");
+                const data = await response.json();
+                
+                const failurePercentage = data.total_pods > 0 ? ((data.failed_pods / data.total_pods) * 100).toFixed(1) : 0;
+                const pendingPercentage = data.total_pods > 0 ? ((data.pending_pods / data.total_pods) * 100).toFixed(1) : 0;
+                const runningPercentage = data.total_pods > 0 ? ((data.running_pods / data.total_pods) * 100).toFixed(1) : 0;
+                
+                let html = `<h3 style="color: #d4af37; margin-bottom: 15px;">Cluster Statistics</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+                        <div style="border: 2px solid #d4af37; background: #2a2a2a; padding: 12px; border-radius: 4px; text-align: center;">
+                            <div style="color: #d4af37; font-size: 0.9em;">Deployments</div>
+                            <div style="color: #ffd700; font-size: 2em; font-weight: bold;">${data.deployments}</div>
+                        </div>
+                        <div style="border: 2px solid #d4af37; background: #2a2a2a; padding: 12px; border-radius: 4px; text-align: center;">
+                            <div style="color: #d4af37; font-size: 0.9em;">Total Pods</div>
+                            <div style="color: #ffd700; font-size: 2em; font-weight: bold;">${data.total_pods}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #d4af37; font-weight: bold; margin-bottom: 8px;">Pod Status:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                            <div style="background: #2a2a2a; border-left: 4px solid #ffd700; padding: 10px; border-radius: 4px;">
+                                <div style="color: #ffd700; font-weight: bold;">${data.running_pods}</div>
+                                <div style="color: #d4af37; font-size: 0.85em;">Running</div>
+                            </div>
+                            <div style="background: #2a2a2a; border-left: 4px solid #d4af37; padding: 10px; border-radius: 4px;">
+                                <div style="color: #d4af37; font-weight: bold;">${data.pending_pods}</div>
+                                <div style="color: #d4af37; font-size: 0.85em;">Pending</div>
+                            </div>
+                            <div style="background: #2a2a2a; border-left: 4px solid #d4af37; padding: 10px; border-radius: 4px;">
+                                <div style="color: #ffd700; font-weight: bold;">${data.failed_pods}</div>
+                                <div style="color: #d4af37; font-size: 0.85em;">Failed</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="color: #d4af37; font-weight: bold; margin-bottom: 8px;">Resource Usage:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div style="border: 2px solid #d4af37; background: #2a2a2a; padding: 12px; border-radius: 4px; text-align: center;">
+                                <div style="color: #d4af37; font-size: 0.9em;">Total CPU</div>
+                                <div style="color: #ffd700; font-weight: bold; font-family: monospace;">${data.total_cpu_requested}</div>
+                            </div>
+                            <div style="border: 2px solid #d4af37; background: #2a2a2a; padding: 12px; border-radius: 4px; text-align: center;">
+                                <div style="color: #d4af37; font-size: 0.9em;">Total Memory</div>
+                                <div style="color: #ffd700; font-weight: bold; font-family: monospace;">${data.total_memory_requested}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                const modal = document.getElementById("statsModal");
+                document.getElementById("statsContent").innerHTML = html;
+                modal.style.display = "flex";
+            } catch (error) {
+                showToast("Error: " + error.message, "error");
+            }
+        }
+
+        function closeStatsModal() {
+            document.getElementById("statsModal").style.display = "none";
+        }
+
+        function toggleFavorite(deployment) {
+            let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+            const index = favorites.indexOf(deployment);
+            
+            if (index === -1) {
+                favorites.push(deployment);
+                showToast(`⭐ ${deployment} added to favorites`, "success");
+            } else {
+                favorites.splice(index, 1);
+                showToast(`✓ ${deployment} removed from favorites`, "info");
+            }
+            
+            localStorage.setItem("favorites", JSON.stringify(favorites));
+            updateFavoriteButtons();
+        }
+
+        function updateFavoriteButtons() {
+            let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+            document.querySelectorAll(".favorite-btn").forEach(btn => {
+                const deployment = btn.getAttribute("data-deployment");
+                if (favorites.includes(deployment)) {
+                    btn.innerHTML = "⭐";
+                    btn.style.color = "#FFD700";
+                } else {
+                    btn.innerHTML = "☆";
+                    btn.style.color = "#ccc";
+                }
+            });
+        }
+
+        function filterByFavorites() {
+            let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+            document.getElementById("deploymentSearch").value = "";
+            
+            const containers = document.querySelectorAll("[data-deployment-group]");
+            let visibleCount = 0;
+            
+            containers.forEach(container => {
+                const deploymentName = container.getAttribute("data-deployment-group");
+                const isFavorite = favorites.includes(deploymentName);
+                container.style.display = isFavorite ? "block" : "none";
+                if (isFavorite) visibleCount++;
+            });
+            
+            const grid = document.querySelector(".grid");
+            if (visibleCount === 0) {
+                grid.innerHTML = '<div class="no-results" style="grid-column: 1/-1;"><i class="fas fa-star"></i><br>No favorite deployments. Star deployments to see them here!</div>';
+            }
+        }
+
+        async function showResourceMetrics(deployment) {
+            if (!deployment) {
+                alert("Please select a deployment first");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/deployment-metrics/${deployment}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    return;
+                }
+                
+                let html = `
+                    <h3 style="margin-bottom: 20px; color: #d4af37;">Resource Usage: <strong>${data.deployment}</strong></h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div style="border: 2px solid #d4af37; border-radius: 8px; padding: 15px; background: #2a2a2a; text-align: center;">
+                            <div style="font-size: 0.9em; color: #d4af37; margin-bottom: 8px;">Total CPU Requested</div>
+                            <div style="font-size: 2em; font-weight: bold; color: #ffd700; font-family: monospace;">${data.total_cpu_request}</div>
+                            <div style="font-size: 0.8em; color: #d4af37; margin-top: 5px;">across ${data.pod_count} pod(s)</div>
+                        </div>
+                        <div style="border: 2px solid #d4af37; border-radius: 8px; padding: 15px; background: #2a2a2a; text-align: center;">
+                            <div style="font-size: 0.9em; color: #d4af37; margin-bottom: 8px;">Total Memory Requested</div>
+                            <div style="font-size: 2em; font-weight: bold; color: #ffd700; font-family: monospace;">${data.total_memory_request}</div>
+                            <div style="font-size: 0.8em; color: #d4af37; margin-top: 5px;">across ${data.pod_count} pod(s)</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 12px; color: #d4af37;">Pod Breakdown:</h4>
+                        <div style="max-height: 350px; overflow-y: auto;">
+                `;
+                
+                if (data.pods.length === 0) {
+                    html += `<p style="color: #d4af37;">No pods found</p>`;
+                } else {
+                    data.pods.forEach(pod => {
+                        html += `
+                            <div style="border-left: 4px solid #d4af37; padding: 12px; margin-bottom: 10px; background: #2a2a2a; border-radius: 4px;">
+                                <div style="font-family: monospace; font-weight: 600; margin-bottom: 8px; color: #d4af37;">${pod.name}</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em;">
+                                    <div>
+                                        <span style="color: #d4af37;">CPU:</span>
+                                        <span style="background: #333333; padding: 2px 8px; border-radius: 3px; font-family: monospace; font-weight: 500; color: #ffd700;">${pod.cpu_request}</span>
+                                    </div>
+                                    <div>
+                                        <span style="color: #d4af37;">Memory:</span>
+                                        <span style="background: #333333; padding: 2px 8px; border-radius: 3px; font-family: monospace; font-weight: 500; color: #ffd700;">${pod.memory_request}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                    <button onclick="closeResourceModal()" style="margin-top: 20px; padding: 10px 20px; background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%); color: #000; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600;">Close</button>
+                `;
+                
+                const modal = document.getElementById("resourcesModal");
+                document.getElementById("resourcesContent").innerHTML = html;
+                modal.style.display = "flex";
+            } catch (error) {
+                alert("Could not fetch metrics: " + error);
+            }
+        }
+
+        function closeResourceModal() {
+            document.getElementById("resourcesModal").style.display = "none";
+        }
+
+        window.onload = function() {
+            initDarkMode();
+            loadDeployments();
+        };
+        window.onclick = function(event) {
+            const modal = document.getElementById("podStatusModal");
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <button class="toggle-dark-mode" onclick="toggleDarkMode()" title="Dark Mode">🌙</button>
+    
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-cubes"></i> Kubernetes Control Panel</h1>
+            <p>Manage your Kubernetes deployments with ease</p>
+            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                <button onclick="showStatsModal()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-size: 0.9em;">
+                    <i class="fas fa-chart-pie"></i> Cluster Stats
+                </button>
+                <button onclick="filterByFavorites()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-size: 0.9em;">
+                    <i class="fas fa-star"></i> Favorites
+                </button>
+            </div>
+        </header>
+
+        <div class="search-container">
+            <input type="text" class="search-input" id="deploymentSearch" placeholder="🔍 Search deployments..." onkeyup="filterDeployments(this.value)">
+            <div class="filter-results" id="filterResults"></div>
+        </div>
+
+        <div class="grid">
+            <!-- SCALE -->
+            <div data-deployment-group="scale">
+            <form action="/send" method="post" onsubmit="handleFormSubmit(event, 'Deployment scaling initiated')">
+                <h3><i class="fas fa-arrows-alt"></i> Scale Deployment</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select"></select>
+                </div>
+                <div class="form-group">
+                    <label>Replicas:</label>
+                    <input type="number" name="replicas" value="3" min="1" max="100">
+                </div>
+                <input type="hidden" name="action" value="scale">
+                <button type="submit" class="scale-btn"><i class="fas fa-play"></i> Scale</button>
+            </form>
+            </div>
+
+            <!-- DELETE -->
+            <form action="/send" method="post" onsubmit="handleFormSubmit(event, 'Deployment deletion initiated')">
+                <h3><i class="fas fa-trash-alt"></i> Delete Deployment</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select"></select>
+                </div>
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="delete-btn"><i class="fas fa-check"></i> Confirm Delete</button>
+            </form>
+
+            <!-- STATUS -->
+            <form action="/send" method="post" onsubmit="handleFormSubmit(event, 'Status check initiated')">
+                <h3><i class="fas fa-info-circle"></i> Get Deployment Status</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select"></select>
+                </div>
+                <input type="hidden" name="action" value="status">
+                <button type="submit" class="status-btn"><i class="fas fa-search"></i> Check Status</button>
+            </form>
+
+            <!-- POD STATUS -->
+            <form>
+                <h3><i class="fas fa-cube"></i> View Pod Status</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select" id="podStatusSelect" style="margin-bottom: 15px;"></select>
+                </div>
+                <button type="button" class="status-btn" onclick="viewPodStatus(document.getElementById('podStatusSelect').value)"><i class="fas fa-bars"></i> Show Pods</button>
+            </form>
+
+            <!-- LOGS VIEWER -->
+            <form>
+                <h3><i class="fas fa-file-alt"></i> View Pod Logs</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select" id="logsSelect" style="margin-bottom: 15px;"></select>
+                </div>
+                <button type="button" class="resources-btn" onclick="showLogsModal(document.getElementById('logsSelect').value)"><i class="fas fa-terminal"></i> View Logs</button>
+            </form>
+
+            <!-- RESOURCE USAGE -->
+            <form>
+                <h3><i class="fas fa-chart-bar"></i> Resource Usage</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select" id="metricsSelect" style="margin-bottom: 15px;"></select>
+                </div>
+                <button type="button" class="status-btn" onclick="showResourceMetrics(document.getElementById('metricsSelect').value)"><i class="fas fa-tachometer-alt"></i> View Metrics</button>
+            </form>
+
+            <!-- UPDATE RESOURCES -->
+            <form action="/send" method="post" onsubmit="handleFormSubmit(event, 'Resource update request sent')">
+                <h3><i class="fas fa-microchip"></i> Update Resources</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select"></select>
+                </div>
+                <input type="hidden" name="action" value="resources">
+                
+                <label style="margin-top: 20px;">CPU</label>
+                <div class="input-group">
+                    <div class="form-group">
+                        <label style="margin-bottom: 8px;">CPU Request:</label>
+                        <input type="text" name="cpu_request" placeholder="200m">
+                    </div>
+                    <div class="form-group">
+                        <label style="margin-bottom: 8px;">CPU Limit:</label>
+                        <input type="text" name="cpu_limit" placeholder="500m">
+                    </div>
+                </div>
+
+                <label style="margin-top: 20px;">Memory</label>
+                <div class="input-group">
+                    <div class="form-group">
+                        <label style="margin-bottom: 8px;">Memory Request:</label>
+                        <input type="text" name="mem_request" placeholder="256Mi">
+                    </div>
+                    <div class="form-group">
+                        <label style="margin-bottom: 8px;">Memory Limit:</label>
+                        <input type="text" name="mem_limit" placeholder="512Mi">
+                    </div>
+                </div>
+
+                <button type="submit" class="resources-btn"><i class="fas fa-save"></i> Update Resources</button>
+            </form>
+
+            <!-- ROLLBACK DEPLOYMENT -->
+            <form>
+                <h3><i class="fas fa-history"></i> Rollback Deployment</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select" id="rollbackSelect" style="margin-bottom: 15px;"></select>
+                </div>
+                <button type="button" class="delete-btn" onclick="showRollbackModal(document.getElementById('rollbackSelect').value)"><i class="fas fa-undo"></i> View History</button>
+            </form>
+
+            <!-- EVENTS TIMELINE -->
+            <form>
+                <h3><i class="fas fa-bell"></i> Events Timeline</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select" id="eventsSelect" style="margin-bottom: 15px;"></select>
+                </div>
+                <button type="button" class="status-btn" onclick="showEventsModal(document.getElementById('eventsSelect').value)"><i class="fas fa-stream"></i> View Events</button>
+            </form>
+
+            <!-- AUTO-SCALING -->
+            <form>
+                <h3><i class="fas fa-chart-line"></i> Auto-scaling (HPA)</h3>
+                <div class="form-group">
+                    <label>Choose Deployment:</label>
+                    <select name="deployment" class="deploy-select" id="hpaSelect" style="margin-bottom: 15px;"></select>
+                </div>
+                <button type="button" class="resources-btn" onclick="showHPAModal(document.getElementById('hpaSelect').value)"><i class="fas fa-sliders-h"></i> Configure HPA</button>
+            </form>
+
+            <!-- STATISTICS DASHBOARD -->
+            <form>
+                <h3><i class="fas fa-tachometer-alt"></i> Cluster Overview</h3>
+                <p style="color: #d4af37; font-size: 0.95em; line-height: 1.6; margin-bottom: 15px;">
+                    View real-time cluster statistics including total deployments, pod status distribution, and overall resource usage across the cluster.
+                </p>
+                <button type="button" class="status-btn" onclick="showStatsModal()">
+                    <i class="fas fa-chart-pie"></i> View Stats
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pod Status Modal -->
+    <div id="podStatusModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closePodModal()">&times;</span>
+            <div id="podStatusContent"></div>
+        </div>
+    </div>
+
+    <!-- Logs Select Modal -->
+    <div id="logsSelectModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeLogsSelectModal()">&times;</span>
+            <div id="logsSelectContent"></div>
+        </div>
+    </div>
+
+    <!-- Logs Viewer Modal -->
+    <div id="logsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeLogsModal()">&times;</span>
+            <div id="logsContent"></div>
+        </div>
+    </div>
+
+    <!-- Resource Metrics Modal -->
+    <div id="resourcesModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeResourceModal()">&times;</span>
+            <div id="resourcesContent"></div>
+        </div>
+    </div>
+
+    <!-- Rollback Modal -->
+    <div id="rollbackModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeRollbackModal()">&times;</span>
+            <div id="rollbackContent"></div>
+        </div>
+    </div>
+
+    <!-- Events Modal -->
+    <div id="eventsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeEventsModal()">&times;</span>
+            <div id="eventsContent"></div>
+        </div>
+    </div>
+
+    <!-- HPA Configuration Modal -->
+    <div id="hpaModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeHPAModal()">&times;</span>
+            <div id="hpaContent"></div>
+        </div>
+    </div>
+
+    <!-- Statistics Dashboard Modal -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeStatsModal()">&times;</span>
+            <div id="statsContent"></div>
+        </div>
+    </div>
+</html>
+
