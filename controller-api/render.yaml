@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: controller-api
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./controller-api/Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "8080"
